@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -28,9 +29,9 @@ type Writer struct {
 	// RefreshInterval is the time the UI sould refresh
 	RefreshInterval time.Duration
 
-	writtenLines int
-	buf          bytes.Buffer
-	written      []byte
+	buf       bytes.Buffer
+	mtx       sync.Mutex
+	lineCount int
 }
 
 // New returns a new writer with defaults
@@ -41,34 +42,36 @@ func New() *Writer {
 	}
 }
 
-// Flush writes to the out and flushes the buffer
-func (w *Writer) Flush() {
-	cur := w.buf.Bytes()
-	if len(cur) == 0 {
-		return
+// Flush writes to the out and resets the buffer. It should be called after the last call to Write to ensure that any data buffered in the Writer is written to output.
+// Any incomplete escape sequence at the end is considered complete for formatting purposes.
+func (w *Writer) Flush() error {
+	w.mtx.Lock()
+	defer w.mtx.Unlock()
+	if len(w.buf.Bytes()) == 0 {
+		return nil
+	}
+	for i := 0; i < w.lineCount; i++ {
+		fmt.Fprintf(w.Out, "%c[%dA", ESC, 0) // move the cursor up
+		fmt.Fprintf(w.Out, "%c[2K\r", ESC)   // clear the line
 	}
 
 	lines := 0
-	for _, b := range cur {
+	for _, b := range w.buf.Bytes() {
 		if b == '\n' {
 			lines++
 		}
 	}
-	for i := 0; i < w.writtenLines; i++ {
-		fmt.Fprintf(w.Out, "%c[%dA", ESC, i) // move the cursor up
-		fmt.Fprintf(w.Out, "%c[2K\r", ESC)   // clear the line
-	}
-
-	w.writtenLines = lines
-	w.Out.Write(cur)
-	w.written = cur
-	w.buf = bytes.Buffer{}
+	w.lineCount = lines
+	_, err := w.Out.Write(w.buf.Bytes())
+	w.buf.Reset()
+	return err
 }
 
 // Start starts the listener that updates the UI
 func (w *Writer) Start() {
 	go func() {
 		for {
+			w.Wait()
 			w.Flush()
 		}
 	}()
@@ -79,7 +82,9 @@ func (w *Writer) Wait() {
 	time.Sleep(w.RefreshInterval)
 }
 
-// Write writes the writers buffer
-func (w *Writer) Write(p []byte) (n int, err error) {
-	return w.buf.Write(p)
+// Write writes buf to the writer b. The only errors returned are ones encountered while writing to the underlying output stream.
+func (w *Writer) Write(buf []byte) (n int, err error) {
+	w.mtx.Lock()
+	defer w.mtx.Unlock()
+	return w.buf.Write(buf)
 }
