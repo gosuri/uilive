@@ -1,4 +1,4 @@
-# uilive
+# uilive [![GoDoc](https://godoc.org/github.com/gosuri/uilive?status.svg)](https://godoc.org/github.com/gosuri/uilive)
 
 uilive is a go library for refreshing ui in a timed interval for terminal applications
 
