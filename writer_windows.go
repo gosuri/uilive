@@ -13,17 +13,12 @@ import (
 var kernel32 = syscall.NewLazyDLL("kernel32.dll")
 
 var (
-	procGetStdHandle               = kernel32.NewProc("GetStdHandle")
 	procGetConsoleScreenBufferInfo = kernel32.NewProc("GetConsoleScreenBufferInfo")
-	procGetConsoleCursorInfo       = kernel32.NewProc("GetConsoleCursorInfo")
 	procSetConsoleCursorPosition   = kernel32.NewProc("SetConsoleCursorPosition")
 	procFillConsoleOutputCharacter = kernel32.NewProc("FillConsoleOutputCharacterW")
 	procFillConsoleOutputAttribute = kernel32.NewProc("FillConsoleOutputAttribute")
-	procSetConsoleTextAttribute    = kernel32.NewProc("SetConsoleTextAttribute")
-	procScrollConsoleScreenBuffer  = kernel32.NewProc("ScrollConsoleScreenBufferW")
 )
 
-type wchar uint16
 type short int16
 type dword uint32
 type word uint16
@@ -46,11 +41,6 @@ type consoleScreenBufferInfo struct {
 	attributes        word
 	window            smallRect
 	maximumWindowSize coord
-}
-
-type consoleCursorInfo struct {
-	size    dword
-	visible int32
 }
 
 func (w *Writer) clearLines() {
