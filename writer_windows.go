@@ -71,7 +71,5 @@ func (w *Writer) clearLines() {
 		var count, w dword
 		count = dword(csbi.size.x)
 		procFillConsoleOutputCharacter.Call(fd, uintptr(' '), uintptr(count), *(*uintptr)(unsafe.Pointer(&cursor)), uintptr(unsafe.Pointer(&w)))
-		procFillConsoleOutputAttribute.Call(fd, uintptr(csbi.attributes), uintptr(count), *(*uintptr)(unsafe.Pointer(&cursor)), uintptr(unsafe.Pointer(&w)))
-
 	}
 }
