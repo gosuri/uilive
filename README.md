@@ -1,10 +1,10 @@
 # uilive [![GoDoc](https://godoc.org/github.com/gosuri/uilive?status.svg)](https://godoc.org/github.com/gosuri/uilive)
 
-uilive is a go library for refreshing ui in a timed interval for terminal applications
+uilive is a go library for updating terminal output in realtime. It provides a buffered [io.Writer](https://golang.org/pkg/io/#Writer) that is flushed in a timed interval. uilive powers [uiprogress](https://github.com/gosuri/uiprogress).
 
-## Example
+## Usage Example
 
-Full source for the below example is in [example/main.go](example/main.go).
+Calling `uilive.New()` will create a new writer. To start rendering, simply call `writer.Start()` and update the ui by writing to the `writer`. Full source for the below example is in [example/main.go](example/main.go).
 
 ```go
 writer := uilive.New()
