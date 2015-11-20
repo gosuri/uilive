@@ -8,7 +8,8 @@ Calling `uilive.New()` will create a new writer. To start rendering, simply call
 
 ```go
 writer := uilive.New()
-writer.Start() // start listening
+// start listening for updates and render
+writer.Start()
 
 for i := 0; i <= 100; i++ {
   fmt.Fprintf(writer, "Downloading.. (%d/%d) GB\n", i, 100)
@@ -16,7 +17,7 @@ for i := 0; i <= 100; i++ {
 }
 
 fmt.Fprintln(writer, "Finished: Downloaded 100GB")
-writer.Wait() // wait for writer to finish writing
+writer.Stop() // flush and stop rendering
 ```
 
 The above will render

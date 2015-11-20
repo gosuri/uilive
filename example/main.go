@@ -9,6 +9,8 @@ import (
 
 func main() {
 	writer := uilive.New()
+
+	// start listening for updates and render
 	writer.Start()
 
 	for i := 0; i <= 100; i++ {
@@ -17,5 +19,5 @@ func main() {
 	}
 
 	fmt.Fprintln(writer, "Finished: Downloaded 100GB")
-	writer.Wait()
+	writer.Stop() // flush and stop rendering
 }

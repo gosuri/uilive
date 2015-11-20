@@ -3,6 +3,7 @@ package uilive
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"os"
 	"sync"
@@ -13,12 +14,14 @@ const (
 	ESC = 27
 )
 
-var (
-	// RefreshInterval is the default refresh interval to update the ui
-	RefreshInterval = time.Millisecond
-	// Out is the default out for the writer
-	Out = os.Stdout
-)
+// RefreshInterval is the default refresh interval to update the ui
+var RefreshInterval = time.Millisecond
+
+// Out is the default out for the writer
+var Out = os.Stdout
+
+// ErrClosedPipe is the error returned when trying to writer is not listening
+var ErrClosedPipe = errors.New("uilive: read/write on closed pipe")
 
 // Writer represent the writer that updates the UI
 type Writer struct {
@@ -28,10 +31,13 @@ type Writer struct {
 	// RefreshInterval is the time the UI sould refresh
 	RefreshInterval time.Duration
 
+	// stopChan is buffered channel for stopping the listener
+	stopChan chan struct{}
+	// running is flag for determining if the listerner is running
+	running bool
+
 	buf       bytes.Buffer
 	mtx       sync.Mutex
-	stopChan  chan struct{}
-	running   bool
 	lineCount int
 }
 
@@ -40,7 +46,8 @@ func New() *Writer {
 	return &Writer{
 		Out:             Out,
 		RefreshInterval: RefreshInterval,
-		stopChan:        make(chan struct{}, 1),
+
+		stopChan: make(chan struct{}, 1),
 	}
 }
 
@@ -49,6 +56,8 @@ func New() *Writer {
 func (w *Writer) Flush() error {
 	w.mtx.Lock()
 	defer w.mtx.Unlock()
+
+	// do nothing is  buffer is empty
 	if len(w.buf.Bytes()) == 0 {
 		return nil
 	}
@@ -73,8 +82,8 @@ func (w *Writer) Start() {
 
 // Stop stops the listener that updates the UI
 func (w *Writer) Stop() {
+	w.Flush()
 	w.stopChan <- struct{}{}
-	return
 }
 
 // Listen listens for updates to the writers buffer and flushes to the out. It blocks the runtime.
@@ -85,8 +94,7 @@ func (w *Writer) Listen() {
 	go func() {
 		w.running = true
 		for {
-			time.Sleep(w.RefreshInterval)
-			w.Flush()
+			w.Wait()
 		}
 	}()
 	<-w.stopChan
