@@ -22,3 +22,9 @@ writer.Wait() // wait for writer to finish writing
 The above will render
 
 ![example](doc/example.gif)
+
+## Installation
+
+```sh
+$ go get -v github.com/gosuri/uilive
+```
