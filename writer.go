@@ -30,6 +30,8 @@ type Writer struct {
 
 	buf       bytes.Buffer
 	mtx       sync.Mutex
+	stopChan  chan struct{}
+	running   bool
 	lineCount int
 }
 
@@ -38,6 +40,7 @@ func New() *Writer {
 	return &Writer{
 		Out:             Out,
 		RefreshInterval: RefreshInterval,
+		stopChan:        make(chan struct{}, 1),
 	}
 }
 
@@ -63,19 +66,37 @@ func (w *Writer) Flush() error {
 	return err
 }
 
-// Start starts the listener that updates the UI
+// Start starts the listener in a non blocking manner
 func (w *Writer) Start() {
+	go w.Listen()
+}
+
+// Stop stops the listener that updates the UI
+func (w *Writer) Stop() {
+	w.stopChan <- struct{}{}
+	return
+}
+
+// Listen listens for updates to the writers buffer and flushes to the out. It blocks the runtime.
+func (w *Writer) Listen() {
+	if w.running {
+		return
+	}
 	go func() {
+		w.running = true
 		for {
-			w.Wait()
+			time.Sleep(w.RefreshInterval)
 			w.Flush()
 		}
 	}()
+	<-w.stopChan
+	w.running = false
 }
 
 // Wait waits for the writer to finish writing
 func (w *Writer) Wait() {
 	time.Sleep(w.RefreshInterval)
+	w.Flush()
 }
 
 // Write writes buf to the writer b. The only errors returned are ones encountered while writing to the underlying output stream.
