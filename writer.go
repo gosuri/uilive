@@ -10,9 +10,8 @@ import (
 	"time"
 )
 
-const (
-	ESC = 27
-)
+// ESC is the ASCII code for escape character
+const ESC = 27
 
 // RefreshInterval is the default refresh interval to update the ui
 var RefreshInterval = time.Millisecond
