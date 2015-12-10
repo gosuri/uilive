@@ -6,11 +6,10 @@ import (
 	"errors"
 	"io"
 	"os"
-	"os/exec"
-	"strconv"
-	"strings"
 	"sync"
 	"time"
+
+	"github.com/nsf/termbox-go"
 )
 
 // ESC is the ASCII code for escape character
@@ -49,12 +48,17 @@ type Writer struct {
 	lineCount int
 }
 
-// New returns a new writer with defaults
-func New() *Writer {
-	if termWidth = getTtyLength(); termWidth != 0 {
+func InitializeTerminalWidth() {
+	err := termbox.Init()
+	termWidth, _ = termbox.Size()
+	if err == nil {
 		overflowHandled = true
 	}
+	termbox.Close()
+}
 
+// New returns a new writer with defaults
+func New() *Writer {
 	return &Writer{
 		Out:             Out,
 		RefreshInterval: RefreshInterval,
@@ -69,7 +73,7 @@ func (w *Writer) Flush() error {
 	w.mtx.Lock()
 	defer w.mtx.Unlock()
 
-	// do nothing is  buffer is empty
+	// do nothing if buffer is empty
 	if len(w.buf.Bytes()) == 0 {
 		return nil
 	}
@@ -81,11 +85,10 @@ func (w *Writer) Flush() error {
 		if b == '\n' {
 			lines++
 			currentLine.Reset()
-		} else {
-			currentLine.Write([]byte{b})
-
+		} else if overflowHandled {
 			// if len of currentLine is > terminal len, add `1` to `lines`
-			if overflowHandled && currentLine.Len() > termWidth {
+			currentLine.Write([]byte{b})
+			if currentLine.Len() > termWidth {
 				lines++
 				currentLine.Reset()
 			}
@@ -100,21 +103,6 @@ func (w *Writer) Flush() error {
 // Start starts the listener in a non blocking manner
 func (w *Writer) Start() {
 	go w.Listen()
-}
-
-func getTtyLength() int {
-	cmd := exec.Command("stty", "size")
-	cmd.Stdin = os.Stdin
-	out, err := cmd.Output()
-	if err != nil {
-		return 0
-	}
-	splits := strings.Split(strings.Trim(string(out), "\n"), " ")
-	length, err := strconv.ParseInt(splits[1], 0, 0)
-	if err != nil {
-		return 0
-	}
-	return int(length)
 }
 
 // Stop stops the listener that updates the UI
