@@ -36,7 +36,7 @@ type Writer struct {
 	running bool
 
 	buf       bytes.Buffer
-	mtx       sync.Mutex
+	mtx       *sync.Mutex
 	lineCount int
 }
 
@@ -46,7 +46,8 @@ func New() *Writer {
 		Out:             Out,
 		RefreshInterval: RefreshInterval,
 
-		stopChan: make(chan struct{}, 1),
+		mtx:      &sync.Mutex{},
+		stopChan: make(chan struct{}),
 	}
 }
 
@@ -83,7 +84,7 @@ func (w *Writer) Start() {
 // Stop stops the listener that updates the terminal
 func (w *Writer) Stop() {
 	w.Flush()
-	w.stopChan <- struct{}{}
+	close(w.stopChan)
 }
 
 // Listen listens for updates to the writer's buffer and flushes to the out provided. It blocks the runtime.
@@ -91,14 +92,19 @@ func (w *Writer) Listen() {
 	if w.running {
 		return
 	}
-	go func() {
-		w.running = true
-		for {
-			w.Wait()
+	for {
+		select {
+		case <-w.stopChan:
+			{
+				w.running = false
+				return
+			}
+		default:
+			{
+				w.Wait()
+			}
 		}
-	}()
-	<-w.stopChan
-	w.running = false
+	}
 }
 
 // Wait waits for the writer to finish writing
