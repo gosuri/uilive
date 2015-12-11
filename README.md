@@ -1,6 +1,7 @@
 # uilive [![GoDoc](https://godoc.org/github.com/gosuri/uilive?status.svg)](https://godoc.org/github.com/gosuri/uilive)
 
 uilive is a go library for updating terminal output in realtime. It provides a buffered [io.Writer](https://golang.org/pkg/io/#Writer) that is flushed at a timed interval. uilive powers [uiprogress](https://github.com/gosuri/uiprogress).
+It works for posix and Windows too!
 
 ## Usage Example
 
