@@ -48,7 +48,7 @@ type Writer struct {
 	lineCount int
 }
 
-func InitializeTerminalWidth() {
+func initTermWidth() {
 	err := termbox.Init()
 	termWidth, _ = termbox.Size()
 	if err == nil {
@@ -59,6 +59,7 @@ func InitializeTerminalWidth() {
 
 // New returns a new writer with defaults
 func New() *Writer {
+	initTermWidth()
 	return &Writer{
 		Out:             Out,
 		RefreshInterval: RefreshInterval,
