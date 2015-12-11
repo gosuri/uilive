@@ -18,12 +18,6 @@ const ESC = 27
 // RefreshInterval is the default refresh interval to update the ui
 var RefreshInterval = time.Millisecond
 
-// overflow is handled if width of buffer exceeds screen width
-var overflowHandled = false
-
-// Width of terminal
-var termWidth int
-
 // Out is the default out for the writer
 var Out = os.Stdout
 
@@ -43,29 +37,35 @@ type Writer struct {
 	// running is flag for determining if the listerner is running
 	running bool
 
+	// overflow is handled if width of buffer exceeds screen width
+	overflowHandled bool
+
+	// Width of terminal
+	termWidth int
 	buf       bytes.Buffer
 	mtx       sync.Mutex
 	lineCount int
 }
 
-func initTermWidth() {
+func (w *Writer) initTermWidth() {
 	err := termbox.Init()
-	termWidth, _ = termbox.Size()
+	w.termWidth, _ = termbox.Size()
 	if err == nil {
-		overflowHandled = true
+		w.overflowHandled = true
 	}
 	termbox.Close()
 }
 
 // New returns a new writer with defaults
 func New() *Writer {
-	initTermWidth()
-	return &Writer{
+	writer := &Writer{
 		Out:             Out,
 		RefreshInterval: RefreshInterval,
 
 		stopChan: make(chan struct{}, 1),
 	}
+	writer.initTermWidth()
+	return writer
 }
 
 // Flush writes to the out and resets the buffer. It should be called after the last call to Write to ensure that any data buffered in the Writer is written to output.
@@ -86,10 +86,10 @@ func (w *Writer) Flush() error {
 		if b == '\n' {
 			lines++
 			currentLine.Reset()
-		} else if overflowHandled {
+		} else if w.overflowHandled {
 			// if len of currentLine is > terminal len, add `1` to `lines`
 			currentLine.Write([]byte{b})
-			if currentLine.Len() > termWidth {
+			if currentLine.Len() > w.termWidth {
 				lines++
 				currentLine.Reset()
 			}
