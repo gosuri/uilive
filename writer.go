@@ -21,6 +21,12 @@ var Out = os.Stdout
 // ErrClosedPipe is the error returned when trying to writer is not listening
 var ErrClosedPipe = errors.New("uilive: read/write on closed pipe")
 
+// FdWriter is a writer with a file descriptor.
+type FdWriter interface {
+	io.Writer
+	Fd() uintptr
+}
+
 // Writer is a buffered the writer that updates the terminal. The contents of writer will be flushed on a timed interval or when Flush is called.
 type Writer struct {
 	// Out is the writer to write to

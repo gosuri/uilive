@@ -5,7 +5,6 @@ package uilive
 import (
 	"fmt"
 	"github.com/mattn/go-isatty"
-	"os"
 	"syscall"
 	"unsafe"
 )
@@ -44,7 +43,7 @@ type consoleScreenBufferInfo struct {
 }
 
 func (w *Writer) clearLines() {
-	f, ok := w.Out.(*os.File)
+	f, ok := w.Out.(FdWriter)
 	if ok && !isatty.IsTerminal(f.Fd()) {
 		ok = false
 	}
