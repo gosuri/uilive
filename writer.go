@@ -46,6 +46,10 @@ type Writer struct {
 	lineCount int
 }
 
+type bypass struct {
+	writer *Writer
+}
+
 // New returns a new Writer with defaults
 func New() *Writer {
 	return &Writer{
@@ -124,4 +128,18 @@ func (w *Writer) Write(b []byte) (n int, err error) {
 	w.mtx.Lock()
 	defer w.mtx.Unlock()
 	return w.buf.Write(b)
+}
+
+// Bypass creates an io.Writer which allows non-buffered output to be written to the underlying output
+func (w *Writer) Bypass() io.Writer {
+	return &bypass{writer: w}
+}
+
+func (b *bypass) Write(p []byte) (n int, err error) {
+	b.writer.mtx.Lock()
+	defer b.writer.mtx.Unlock()
+
+	b.writer.clearLines()
+	b.writer.lineCount = 0
+	return b.writer.Out.Write(p)
 }
