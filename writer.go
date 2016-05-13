@@ -35,11 +35,7 @@ type Writer struct {
 	// RefreshInterval is the time the UI sould refresh
 	RefreshInterval time.Duration
 
-	// stopChan is buffered channel for stopping the listener
-	stopChan chan struct{}
-
-	// running is flag for determining if the listerner is running
-	running bool
+	ticker *time.Ticker
 
 	buf       bytes.Buffer
 	mtx       *sync.Mutex
@@ -56,8 +52,7 @@ func New() *Writer {
 		Out:             Out,
 		RefreshInterval: RefreshInterval,
 
-		mtx:      &sync.Mutex{},
-		stopChan: make(chan struct{}),
+		mtx: &sync.Mutex{},
 	}
 }
 
@@ -88,39 +83,26 @@ func (w *Writer) Flush() error {
 
 // Start starts the listener in a non-blocking manner
 func (w *Writer) Start() {
+	if w.ticker == nil {
+		w.ticker = time.NewTicker(w.RefreshInterval)
+	}
+
 	go w.Listen()
 }
 
 // Stop stops the listener that updates the terminal
 func (w *Writer) Stop() {
 	w.Flush()
-	close(w.stopChan)
+	w.ticker.Stop()
 }
 
 // Listen listens for updates to the writer's buffer and flushes to the out provided. It blocks the runtime.
 func (w *Writer) Listen() {
-	if w.running {
-		return
-	}
-	for {
-		select {
-		case <-w.stopChan:
-			{
-				w.running = false
-				return
-			}
-		default:
-			{
-				w.Wait()
-			}
+	go func() {
+		for _ = range w.ticker.C {
+			w.Flush()
 		}
-	}
-}
-
-// Wait waits for the writer to finish writing
-func (w *Writer) Wait() {
-	time.Sleep(w.RefreshInterval)
-	w.Flush()
+	}()
 }
 
 // Write save the contents of b to its buffers. The only errors returned are ones encountered while writing to the underlying buffer.
