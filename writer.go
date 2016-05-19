@@ -36,6 +36,7 @@ type Writer struct {
 	RefreshInterval time.Duration
 
 	ticker *time.Ticker
+	tdone  chan bool
 
 	buf       bytes.Buffer
 	mtx       *sync.Mutex
@@ -85,6 +86,7 @@ func (w *Writer) Flush() error {
 func (w *Writer) Start() {
 	if w.ticker == nil {
 		w.ticker = time.NewTicker(w.RefreshInterval)
+		w.tdone = make(chan bool, 1)
 	}
 
 	go w.Listen()
@@ -93,16 +95,21 @@ func (w *Writer) Start() {
 // Stop stops the listener that updates the terminal
 func (w *Writer) Stop() {
 	w.Flush()
-	w.ticker.Stop()
+	close(w.tdone)
 }
 
 // Listen listens for updates to the writer's buffer and flushes to the out provided. It blocks the runtime.
 func (w *Writer) Listen() {
-	go func() {
-		for _ = range w.ticker.C {
+	for {
+		select {
+		case <-w.ticker.C:
 			w.Flush()
+		case <-w.tdone:
+			w.ticker.Stop()
+			w.ticker = nil
+			return
 		}
-	}()
+	}
 }
 
 // Write save the contents of b to its buffers. The only errors returned are ones encountered while writing to the underlying buffer.
