@@ -15,7 +15,9 @@ func TestWriter(t *testing.T) {
 		fmt.Fprintln(w, "foo")
 	}
 	w.Stop()
-	want := "foo\nfoo\n"
+	fmt.Fprintln(b, "bar")
+
+	want := "foo\nfoo\nbar\n"
 	if b.String() != want {
 		t.Fatalf("want %q, got %q", want, b.String())
 	}
