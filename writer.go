@@ -103,12 +103,9 @@ func (w *Writer) Listen() {
 	for {
 		select {
 		case <-w.ticker.C:
-			w.mtx.Lock()
 			if w.ticker != nil {
 				w.Flush()
 			}
-
-			w.mtx.Unlock()
 		case <-w.tdone:
 			w.mtx.Lock()
 			w.ticker.Stop()
