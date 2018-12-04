@@ -22,3 +22,14 @@ func TestWriter(t *testing.T) {
 		t.Fatalf("want %q, got %q", want, b.String())
 	}
 }
+
+func TestStartCalledTwice(t *testing.T) {
+	w := New()
+	b := &bytes.Buffer{}
+	w.Out = b
+
+	w.Start()
+	w.Stop()
+	w.Start()
+	w.Stop()
+}
