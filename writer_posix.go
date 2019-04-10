@@ -4,11 +4,12 @@ package uilive
 
 import (
 	"fmt"
+	"strings"
 )
 
+// clear the line and move the cursor up
+var clear = fmt.Sprintf("%c[%dA%c[2K", ESC, 1, ESC)
+
 func (w *Writer) clearLines() {
-	for i := 0; i < w.lineCount; i++ {
-		fmt.Fprintf(w.Out, "%c[2K", ESC)     // clear the line
-		fmt.Fprintf(w.Out, "%c[%dA", ESC, 1) // move the cursor up
-	}
+	_, _ = fmt.Fprint(w.Out, strings.Repeat(clear, w.lineCount))
 }

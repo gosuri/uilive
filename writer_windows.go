@@ -4,7 +4,6 @@ package uilive
 
 import (
 	"fmt"
-	"github.com/mattn/go-isatty"
 	"syscall"
 	"unsafe"
 )
@@ -17,6 +16,9 @@ var (
 	procFillConsoleOutputCharacter = kernel32.NewProc("FillConsoleOutputCharacterW")
 	procFillConsoleOutputAttribute = kernel32.NewProc("FillConsoleOutputAttribute")
 )
+
+// clear the line and move the cursor up
+var clear = fmt.Sprintf("%c[%dA%c[2K", ESC, 1, ESC)
 
 type short int16
 type dword uint32
@@ -48,10 +50,7 @@ func (w *Writer) clearLines() {
 		ok = false
 	}
 	if !ok {
-		for i := 0; i < w.lineCount; i++ {
-			fmt.Fprintf(w.Out, "%c[%dA", ESC, 0) // move the cursor up
-			fmt.Fprintf(w.Out, "%c[2K\r", ESC)   // clear the line
-		}
+		_, _ = fmt.Fprint(w.Out, strings.Repeat(clear, w.lineCount))
 		return
 	}
 	fd := f.Fd()
