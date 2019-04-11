@@ -13,14 +13,15 @@ func main() {
 	// start listening for updates and render
 	writer.Start()
 
-	for _, f := range []string{"Foo.zip", "Bar.iso"} {
+	for _, f := range [][]string{{"Foo.zip", "Bar.iso"}, {"Baz.tar.gz", "Qux.img"}} {
 		for i := 0; i <= 50; i++ {
-			fmt.Fprintf(writer, "Downloading %s.. (%d/%d) GB\n", f, i, 50)
+			_, _ = fmt.Fprintf(writer, "Downloading %s.. (%d/%d) GB\n", f[0], i, 50)
+			_, _ = fmt.Fprintf(writer.Newline(), "Downloading %s.. (%d/%d) GB\n", f[1], i, 50)
 			time.Sleep(time.Millisecond * 25)
 		}
-		fmt.Fprintf(writer.Bypass(), "Downloaded %s\n", f)
+		_, _ = fmt.Fprintf(writer.Bypass(), "Downloaded %s\n", f[0])
+		_, _ = fmt.Fprintf(writer.Bypass(), "Downloaded %s\n", f[1])
 	}
-
-	fmt.Fprintln(writer, "Finished: Downloaded 100GB")
+	_, _ = fmt.Fprintln(writer, "Finished: Downloaded 150GB")
 	writer.Stop() // flush and stop rendering
 }

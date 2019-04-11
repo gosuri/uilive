@@ -15,6 +15,10 @@ const ESC = 27
 // RefreshInterval is the default refresh interval to update the ui
 var RefreshInterval = time.Millisecond
 
+var overFlowHandled bool
+
+var termWidth int
+
 // Out is the default output writer for the Writer
 var Out = os.Stdout
 
@@ -47,8 +51,17 @@ type bypass struct {
 	writer *Writer
 }
 
+type newline struct {
+	writer *Writer
+}
+
 // New returns a new Writer with defaults
 func New() *Writer {
+	termWidth, _ = getTermSize()
+	if termWidth != 0 {
+		overFlowHandled = true
+	}
+
 	return &Writer{
 		Out:             Out,
 		RefreshInterval: RefreshInterval,
@@ -64,16 +77,24 @@ func (w *Writer) Flush() error {
 	w.mtx.Lock()
 	defer w.mtx.Unlock()
 
-	// do nothing is  buffer is empty
+	// do nothing if buffer is empty
 	if len(w.buf.Bytes()) == 0 {
 		return nil
 	}
 	w.clearLines()
 
 	lines := 0
+	var currentLine bytes.Buffer
 	for _, b := range w.buf.Bytes() {
 		if b == '\n' {
 			lines++
+			currentLine.Reset()
+		} else {
+			currentLine.Write([]byte{b})
+			if overFlowHandled && currentLine.Len() > termWidth {
+				lines++
+				currentLine.Reset()
+			}
 		}
 	}
 	w.lineCount = lines
@@ -116,11 +137,11 @@ func (w *Writer) Listen() {
 	}
 }
 
-// Write save the contents of b to its buffers. The only errors returned are ones encountered while writing to the underlying buffer.
-func (w *Writer) Write(b []byte) (n int, err error) {
+// Write save the contents of buf to the writer b. The only errors returned are ones encountered while writing to the underlying buffer.
+func (w *Writer) Write(buf []byte) (n int, err error) {
 	w.mtx.Lock()
 	defer w.mtx.Unlock()
-	return w.buf.Write(b)
+	return w.buf.Write(buf)
 }
 
 // Bypass creates an io.Writer which allows non-buffered output to be written to the underlying output
@@ -128,11 +149,23 @@ func (w *Writer) Bypass() io.Writer {
 	return &bypass{writer: w}
 }
 
-func (b *bypass) Write(p []byte) (n int, err error) {
+func (b *bypass) Write(p []byte) (int, error) {
 	b.writer.mtx.Lock()
 	defer b.writer.mtx.Unlock()
 
 	b.writer.clearLines()
 	b.writer.lineCount = 0
 	return b.writer.Out.Write(p)
+}
+
+// Newline creates an io.Writer which allows buffered output to be written to the underlying output. This enable writing
+// to multiple lines at once.
+func (w *Writer) Newline() io.Writer {
+	return &newline{writer: w}
+}
+
+func (n *newline) Write(p []byte) (int, error) {
+	n.writer.mtx.Lock()
+	defer n.writer.mtx.Unlock()
+	return n.writer.buf.Write(p)
 }
