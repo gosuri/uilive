@@ -51,6 +51,10 @@ type bypass struct {
 	writer *Writer
 }
 
+type newline struct {
+	writer *Writer
+}
+
 // New returns a new Writer with defaults
 func New() *Writer {
 	termWidth, _ = getTermSize()
@@ -145,11 +149,23 @@ func (w *Writer) Bypass() io.Writer {
 	return &bypass{writer: w}
 }
 
-func (b *bypass) Write(p []byte) (n int, err error) {
+func (b *bypass) Write(p []byte) (int, error) {
 	b.writer.mtx.Lock()
 	defer b.writer.mtx.Unlock()
 
 	b.writer.clearLines()
 	b.writer.lineCount = 0
 	return b.writer.Out.Write(p)
+}
+
+// Newline creates an io.Writer which allows buffered output to be written to the underlying output. This enable writing
+// to multiple lines at once.
+func (w *Writer) Newline() io.Writer {
+	return &newline{writer: w}
+}
+
+func (n *newline) Write(p []byte) (int, error) {
+	n.writer.mtx.Lock()
+	defer n.writer.mtx.Unlock()
+	return n.writer.buf.Write(p)
 }
