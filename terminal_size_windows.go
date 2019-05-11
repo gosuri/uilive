@@ -4,7 +4,6 @@ package uilive
 
 import (
 	"math"
-	"os"
 	"syscall"
 	"unsafe"
 )
@@ -43,7 +42,7 @@ func getCurrentConsoleFont(h syscall.Handle, info *consoleFontInfo) (err error) 
 func getTermSize() (int, int) {
 	out, err := syscall.Open("CONOUT$", syscall.O_RDWR, 0)
 	if err != nil {
-		os.Exit(1)
+		return 0, 0
 	}
 
 	x, _, err := getSystemMetrics.Call(SmCxMin)
@@ -55,9 +54,9 @@ func getTermSize() (int, int) {
 		}
 	}
 
-	err1 := getCurrentConsoleFont(out, &tmpConsoleFontInfo)
-	if err1 != nil {
-		panic(err1)
+	err = getCurrentConsoleFont(out, &tmpConsoleFontInfo)
+	if err != nil {
+		panic(err)
 	}
 
 	return int(math.Ceil(float64(x) / float64(tmpConsoleFontInfo.fontSize.x))), int(math.Ceil(float64(y) / float64(tmpConsoleFontInfo.fontSize.y)))
