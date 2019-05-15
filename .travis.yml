@@ -1,9 +1,27 @@
 language: go
 sudo: false
+
+matrix:
+  include:
+    - go: 1.4
+      os: linux
+    - go: tip
+      os: linux
+      env: CROSS_COMPILE=true
+    - go: tip
+      os: osx
+
 before_install:
-  - go get "github.com/nsf/termbox-go"
+  - if [ "$CROSS_COMPILE" = "true" ]; then sudo apt update; fi
+
 install:
-  - go get ./...
-go:
-  - 1.4
-  - tip
+  - if [ "$CROSS_COMPILE" = "true" ]; then sudo apt install libc6-dev-i386; fi
+  - if [ "$CROSS_COMPILE" = "true" ]; then sudo apt install gcc-mingw-w64; fi
+  - go get github.com/nsf/termbox-go
+  - if [ "$TRAVIS_OS_NAME" = "linux" -a "$CROSS_COMPILE" = "true" ]; then go get github.com/mattn/go-isatty ; fi
+  - go get -t -v ./...
+
+script:
+  - go build
+  - go test
+  - if [ "$TRAVIS_OS_NAME" = "linux" -a "$CROSS_COMPILE" = "true" ]; then env GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -v; fi
