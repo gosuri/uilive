@@ -1,37 +1,14 @@
 package uilive
 
 import (
-	"os"
-	"runtime"
-	"syscall"
-	"unsafe"
+	"github.com/nsf/termbox-go"
 )
 
-type windowSize struct {
-	rows    uint16
-	cols    uint16
-	xPixels uint16
-	yPixels uint16
-}
-
-var out *os.File
-var err error
-var sz windowSize
-
 func getTermSize() (int, int) {
-	if runtime.GOOS == "openbsd" {
-		out, err = os.OpenFile("/dev/tty", os.O_RDWR, 0)
-		if err != nil {
-			os.Exit(1)
-		}
-
-	} else {
-		out, err = os.OpenFile("/dev/tty", os.O_WRONLY, 0)
-		if err != nil {
-			os.Exit(1)
-		}
+	if err := termbox.Init(); err != nil {
+		panic(err)
 	}
-	_, _, _ = syscall.Syscall(syscall.SYS_IOCTL,
-		out.Fd(), uintptr(syscall.TIOCGWINSZ), uintptr(unsafe.Pointer(&sz)))
-	return int(sz.cols), int(sz.rows)
+	w, h := termbox.Size()
+	termbox.Close()
+	return w, h
 }
