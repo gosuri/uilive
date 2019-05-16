@@ -1,3 +1,5 @@
+// +build !windows
+
 package uilive
 
 import (
@@ -22,13 +24,13 @@ func getTermSize() (int, int) {
 	if runtime.GOOS == "openbsd" {
 		out, err = os.OpenFile("/dev/tty", os.O_RDWR, 0)
 		if err != nil {
-			os.Exit(1)
+			return 0, 0
 		}
 
 	} else {
 		out, err = os.OpenFile("/dev/tty", os.O_WRONLY, 0)
 		if err != nil {
-			os.Exit(1)
+			return 0, 0
 		}
 	}
 	_, _, _ = syscall.Syscall(syscall.SYS_IOCTL,
