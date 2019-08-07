@@ -115,7 +115,7 @@ func (w *Writer) Start() {
 
 // Stop stops the listener that updates the terminal
 func (w *Writer) Stop() {
-	w.Flush()
+	_ = w.Flush()
 	close(w.tdone)
 }
 
@@ -125,7 +125,7 @@ func (w *Writer) Listen() {
 		select {
 		case <-w.ticker.C:
 			if w.ticker != nil {
-				w.Flush()
+				_ = w.Flush()
 			}
 		case <-w.tdone:
 			w.mtx.Lock()

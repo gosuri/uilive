@@ -12,8 +12,6 @@ import (
 type windowSize struct {
 	rows    uint16
 	cols    uint16
-	xPixels uint16
-	yPixels uint16
 }
 
 var out *os.File
