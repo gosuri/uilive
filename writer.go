@@ -20,7 +20,7 @@ var overFlowHandled bool
 var termWidth int
 
 // Out is the default output writer for the Writer
-var Out = os.Stdout
+var Out = io.Writer(os.Stdout)
 
 // ErrClosedPipe is the error returned when trying to writer is not listening
 var ErrClosedPipe = errors.New("uilive: read/write on closed pipe")
