@@ -94,13 +94,19 @@ func (w *Writer) Flush() error {
 		escaping    bool
 	)
 
-	for _, b := range w.buf.Bytes() {
+	bytes := w.buf.Bytes()
+	bytesLen := len(bytes)
+	for i, b := range bytes {
 		switch {
 		case b == '\n':
 			lines++
 			currentLine.Reset()
 		case b == ESC:
-			escaping = true
+			// All ASCII escape sequences start with ESC, followed by a second
+			// byte in the 0x40 to 0x5F range.
+			if i < bytesLen-1 && bytes[i+1] >= 0x40 && bytes[i+1] <= 0x5F {
+				escaping = true
+			}
 		case escaping && b == ASCII_END_COLOR_CODE:
 			escaping = false
 		default:
