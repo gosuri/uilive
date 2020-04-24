@@ -90,11 +90,11 @@ func (w *Writer) Flush() error {
 			lines++
 			currentLine.Reset()
 		} else {
-			currentLine.Write([]byte{b})
-			if overFlowHandled && currentLine.Len() > termWidth {
+			if overFlowHandled && currentLine.Len() >= termWidth {
 				lines++
 				currentLine.Reset()
 			}
+			currentLine.Write([]byte{b})
 		}
 	}
 	w.lineCount = lines
