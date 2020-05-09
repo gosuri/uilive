@@ -19,7 +19,7 @@ var (
 )
 
 // clear the line and move the cursor up
-var clear = fmt.Sprintf("%c[%dA%c[2K\r", ESC, 0, ESC)
+var Clear = fmt.Sprintf("%c[%dA%c[2K\r", ESC, 0, ESC)
 
 type short int16
 type dword uint32
@@ -51,7 +51,7 @@ func (w *Writer) clearLines() {
 		ok = false
 	}
 	if !ok {
-		_, _ = fmt.Fprint(w.Out, strings.Repeat(clear, w.lineCount))
+		_, _ = fmt.Fprint(w.Out, strings.Repeat(Clear, w.lineCount))
 		return
 	}
 	fd := f.Fd()
