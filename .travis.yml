@@ -17,6 +17,22 @@ matrix:
       os: osx
     - go: 1.12.x
       os: osx
+      # Adding ppc64le jobs
+    - go: 1.11.x
+      arch: ppc64le
+      os: linux
+    - go: 1.12.x
+      arch: ppc64le
+      os: linux
+    - go: 1.11.x
+      arch: ppc64le
+      os: linux
+      env: CROSS_COMPILE=true
+    - go: 1.12.x
+      arch: ppc64le
+      os: linux
+      env: CROSS_COMPILE=true
+
 
 install:
   - if [ "$TRAVIS_OS_NAME" = "linux" -a "$CROSS_COMPILE" = "true" ]; then go get github.com/mattn/go-isatty ; fi
