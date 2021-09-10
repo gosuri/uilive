@@ -14,17 +14,17 @@ type windowSize struct {
 	cols    uint16
 }
 
-var out *os.File
-var err error
-var sz windowSize
-
 func getTermSize() (int, int) {
+	var (
+		out *os.File
+		err error
+		sz  windowSize
+	)
 	if runtime.GOOS == "openbsd" {
 		out, err = os.OpenFile("/dev/tty", os.O_RDWR, 0)
 		if err != nil {
 			return 0, 0
 		}
-
 	} else {
 		out, err = os.OpenFile("/dev/tty", os.O_WRONLY, 0)
 		if err != nil {
