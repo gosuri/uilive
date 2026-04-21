@@ -113,9 +113,17 @@ func (w *Writer) Start() {
 	go w.Listen()
 }
 
-// Stop stops the listener that updates the terminal
+// Stop stops the listener that updates the terminal.
+//
+// Stop is a no-op if Start has not been called (or if Stop has already
+// run once); a nil tdone channel is treated as 'there is no listener
+// goroutine to signal' rather than panicking with a send-on-nil-channel
+// deadlock (#17).
 func (w *Writer) Stop() {
 	w.Flush()
+	if w.tdone == nil {
+		return
+	}
 	w.tdone <- true
 	<-w.tdone
 }
