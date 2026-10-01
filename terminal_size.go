@@ -1,3 +1,4 @@
+//go:build !windows
 // +build !windows
 
 package uilive
@@ -10,8 +11,10 @@ import (
 )
 
 type windowSize struct {
-	rows    uint16
-	cols    uint16
+	rows   uint16
+	cols   uint16
+	xpixel uint16
+	ypixel uint16
 }
 
 var out *os.File
