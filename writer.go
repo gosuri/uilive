@@ -120,6 +120,16 @@ func (w *Writer) Stop() {
 	<-w.tdone
 }
 
+// Erase clears all lines previously written to the terminal and resets the line counter and internal buffer.
+func (w *Writer) Erase() {
+	w.mtx.Lock()
+	defer w.mtx.Unlock()
+
+	w.clearLines()
+	w.lineCount = 0
+	w.buf.Reset()
+}
+
 // Listen listens for updates to the writer's buffer and flushes to the out provided. It blocks the runtime.
 func (w *Writer) Listen() {
 	for {
